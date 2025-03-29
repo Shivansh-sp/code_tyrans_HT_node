@@ -91,7 +91,7 @@ out
 .nuxt
 dist
 
-serviceAccountKey.json
+
 
 # Gatsby files
 .cache/
