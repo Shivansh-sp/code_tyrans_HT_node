@@ -3,8 +3,10 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const twilio = require("twilio");
-const { Clerk } = require('@clerk/clerk-sdk-node');
+
 const jwt = require("jsonwebtoken");
+
+
 
 
 
@@ -22,27 +24,7 @@ mongoose.connect(process.env.MONGO_URI, {
 }).then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ MongoDB Connection Error:", err));
 
-  // Initialize Clerk
-const clerk = new Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
-
-  const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-
-  // Auth Middleware
-const authenticateUser = async (req, res, next) => {
-    try {
-      const sessionToken = req.headers.authorization?.split(' ')[1];
-      if (!sessionToken) {
-        return res.status(401).json({ error: "Authorization token required" });
-      }
-  
-      const user = await clerk.verifyToken(sessionToken);
-      req.user = user;
-      next();
-    } catch (error) {
-      console.error("Authentication error:", error);
-      res.status(401).json({ error: "Invalid or expired token" });
-    }
-  };
+  const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
   const sendSOS = async (req, res) => {
       try {
@@ -65,41 +47,9 @@ const authenticateUser = async (req, res, next) => {
   module.exports = { sendSOS };
   app.post("/api/sos", sendSOS);
 
- // Initialize Firebase Admin SDK (Ensures it runs only once)
- try {
-    if (!admin.apps.length) {
-        admin.initializeApp({
-            credential: admin.credential.cert({
-                projectId: process.env.FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-            })
-        });
-        console.log("✅ Firebase Admin SDK Initialized Successfully!");
-    }
-} catch (error) {
-    console.error("❌ Firebase Admin SDK Initialization Failed:", error);
-}
+ 
 
-// Function to verify Firebase connection
-const testFirebaseConnection = async () => {
-    try {
-        // Test Firestore
-        const db = admin.firestore();
-        await db.collection('test').doc('connection-check').set({ status: "connected", timestamp: new Date() });
-        console.log("✅ Firebase Firestore is connected and writable!");
 
-        // Test Authentication (List users)
-        const listUsers = await admin.auth().listUsers(1);
-        console.log("✅ Firebase Authentication is working! Found users:", listUsers.users.length);
-
-    } catch (error) {
-        console.error("❌ Firebase Connection Failed:", error);
-    }
-};
-
-// Call the function
-testFirebaseConnection();
 
 
   
